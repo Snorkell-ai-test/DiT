@@ -26,8 +26,17 @@ import argparse
 
 
 def create_npz_from_sample_folder(sample_dir, num=50_000):
-    """
-    Builds a single .npz file from a folder of .png samples.
+    """    Builds a single .npz file from a folder of .png samples.
+
+    Args:
+        sample_dir (str): The directory path containing the .png samples.
+        num (int): The number of samples to be used for building the .npz file. Defaults to 50000.
+
+    Returns:
+        str: The file path of the created .npz file.
+
+    Raises:
+        AssertionError: If the shape of the samples array does not match the expected shape.
     """
     samples = []
     for i in tqdm(range(num), desc="Building .npz file from samples"):
@@ -43,8 +52,22 @@ def create_npz_from_sample_folder(sample_dir, num=50_000):
 
 
 def main(args):
-    """
-    Run sampling.
+    """    Run sampling.
+
+    This function runs the sampling process using Distributed Data Parallel (DDP) for efficient parallel processing.
+    It sets up the DDP, loads the model, and generates samples on each GPU. The samples are then saved to disk and
+    converted to .npz format.
+
+    Args:
+        args (argparse.Namespace): A namespace containing the command-line arguments.
+
+
+    Raises:
+        AssertionError: If sampling with DDP is attempted without any available GPU.
+        AssertionError: If the specified model is not "DiT-XL/2" when the checkpoint is not provided.
+        AssertionError: If the specified image size is not 256 or 512 when the checkpoint is not provided.
+        AssertionError: If the specified number of classes is not 1000 when the checkpoint is not provided.
+        AssertionError: If the cfg_scale is less than 1.0.
     """
     torch.backends.cuda.matmul.allow_tf32 = args.tf32  # True: fast but may lead to some small numerical differences
     assert torch.cuda.is_available(), "Sampling with DDP requires at least one GPU. sample.py supports CPU-only usage"

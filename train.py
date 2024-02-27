@@ -38,8 +38,18 @@ from diffusers.models import AutoencoderKL
 
 @torch.no_grad()
 def update_ema(ema_model, model, decay=0.9999):
-    """
-    Step the EMA model towards the current model.
+    """    Step the Exponential Moving Average (EMA) model towards the current model.
+
+    This function updates the EMA model parameters towards the current model parameters using a decay factor.
+
+    Args:
+        ema_model (torch.nn.Module): The EMA model to be updated.
+        model (torch.nn.Module): The current model.
+        decay (float?): The decay factor for updating the EMA model. Defaults to 0.9999.
+
+
+    Note:
+        This function directly modifies the EMA model parameters in-place.
     """
     ema_params = OrderedDict(ema_model.named_parameters())
     model_params = OrderedDict(model.named_parameters())
@@ -50,23 +60,37 @@ def update_ema(ema_model, model, decay=0.9999):
 
 
 def requires_grad(model, flag=True):
-    """
-    Set requires_grad flag for all parameters in a model.
+    """    Set requires_grad flag for all parameters in a model.
+
+    Args:
+        model (torch.nn.Module): The model for which the requires_grad flag needs to be set.
+        flag (bool?): The flag to indicate whether the parameters should require gradient computation.
+            Defaults to True.
     """
     for p in model.parameters():
         p.requires_grad = flag
 
 
 def cleanup():
-    """
-    End DDP training.
+    """    End DDP training.
+
+    This function ends the DDP (Distributed Data Parallel) training by destroying the process group.
     """
     dist.destroy_process_group()
 
 
 def create_logger(logging_dir):
-    """
-    Create a logger that writes to a log file and stdout.
+    """    Create a logger that writes to a log file and stdout.
+
+    This function creates a logger that writes log messages to both a log file and the standard output.
+    If the current process rank is 0, it configures the logger with the specified logging level, format, and handlers.
+    Otherwise, it creates a dummy logger that does nothing.
+
+    Args:
+        logging_dir (str): The directory path where the log file will be stored.
+
+    Returns:
+        logging.Logger: A logger object configured to write logs to the specified directory.
     """
     if dist.get_rank() == 0:  # real logger
         logging.basicConfig(
@@ -83,9 +107,17 @@ def create_logger(logging_dir):
 
 
 def center_crop_arr(pil_image, image_size):
-    """
-    Center cropping implementation from ADM.
-    https://github.com/openai/guided-diffusion/blob/8fb3ad9197f16bbc40620447b2742e13458d2831/guided_diffusion/image_datasets.py#L126
+    """    Center crop the input image to the specified size.
+
+    This function resizes the input image to ensure that the smaller dimension is at least twice the size of the specified image size.
+    It then scales the image to match the specified size using bicubic interpolation and returns the center-cropped image.
+
+    Args:
+        pil_image (PIL.Image): The input image to be center cropped.
+        image_size (int): The size of the output cropped image.
+
+    Returns:
+        PIL.Image: The center-cropped image.
     """
     while min(*pil_image.size) >= 2 * image_size:
         pil_image = pil_image.resize(
@@ -108,8 +140,18 @@ def center_crop_arr(pil_image, image_size):
 #################################################################################
 
 def main(args):
-    """
-    Trains a new DiT model.
+    """    Trains a new DiT model.
+
+    This function trains a new Differentiable Transformer (DiT) model using Distributed Data Parallel (DDP) and
+    AdamW optimizer. It sets up the experiment folder, creates the DiT model, sets up the optimizer, prepares the data,
+    and performs the training for the specified number of epochs.
+
+    Args:
+        args (argparse.Namespace): The command-line arguments containing the model configuration and training settings.
+
+
+    Raises:
+        AssertionError: If training is attempted without any available GPU.
     """
     assert torch.cuda.is_available(), "Training currently requires at least one GPU."
 
