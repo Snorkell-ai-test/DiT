@@ -19,6 +19,19 @@ import argparse
 
 
 def main(args):
+    """    Main function to perform image sampling using a pre-trained DiT-XL/2 model and a VAE.
+
+    This function sets up PyTorch, loads the model, creates sampling noise, and performs image sampling.
+    It then saves and displays the sampled images.
+
+    Args:
+        args (argparse.Namespace): Command-line arguments.
+
+
+    Raises:
+        AssertionError: If the specified model, image size, or number of classes are not as expected.
+    """
+
     # Setup PyTorch:
     torch.manual_seed(args.seed)
     torch.set_grad_enabled(False)
